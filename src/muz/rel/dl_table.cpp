@@ -94,7 +94,6 @@ namespace datalog {
         return alloc(join_fn, t1.get_signature(), t2.get_signature(), col_cnt, cols1, cols2);
     }
 
-
     class hashtable_table::our_iterator_core : public iterator_core {
         const hashtable_table & m_parent;
         storage::iterator m_inner;

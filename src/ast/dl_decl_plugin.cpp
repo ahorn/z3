@@ -44,7 +44,8 @@ namespace datalog {
         m_num_sym("N"),
         m_lt_sym("<"),
         m_le_sym("<="),
-        m_rule_sym("R")
+        m_rule_sym("R"),
+        m_min_sym("min")
     {
     }
 
@@ -490,6 +491,43 @@ namespace datalog {
         return m_manager->mk_func_decl(m_clone_sym, 1, &s, s, info);
     }
 
+    func_decl * dl_decl_plugin::mk_min(decl_kind k, unsigned num_parameters, parameter const * parameters) {
+        if (num_parameters < 2) {
+            m_manager->raise_exception("invalid min aggregate definition due to missing parameters");
+            return 0;
+        }
+
+        if (!parameters[0].is_ast() || !is_func_decl(parameters[0].get_ast())) {
+            m_manager->raise_exception("invalid min aggregate definition, parameter is not a function declaration");
+            return 0;
+        }
+
+        func_decl* f = to_func_decl(parameters[0].get_ast());
+        if (!m_manager->is_bool(f->get_range())) {
+            m_manager->raise_exception("invalid min aggregate definition, range of function declaration must be bool");
+            return 0;
+        }
+        for (unsigned i = 1; i < num_parameters; ++i) {
+            if (!parameters[i].is_int()) {
+                std::ostringstream buffer;
+                buffer << "invalid min aggregate definition, "
+                       << "parameter number " << i << " is not an integer";
+                m_manager->raise_exception(buffer.str().c_str());
+                return 0;
+            }
+            if (parameters[i].get_int() < 0) {
+                std::ostringstream buffer;
+                buffer << "invalid min aggregate definition, "
+                       << "parameter number " << i << " is negative";
+                m_manager->raise_exception(buffer.str().c_str());
+                return 0;
+            }
+            //if ((unsigned) parameters[i].get_int() >= f->get_arity()) return 0;
+        }
+        func_decl_info info(m_family_id, k, num_parameters, parameters);
+        return m_manager->mk_func_decl(m_min_sym, 0, (sort *const*)0, m_manager->mk_bool_sort(), info);
+    }
+
     func_decl * dl_decl_plugin::mk_func_decl(
         decl_kind k, unsigned num_parameters, parameter const * parameters, 
         unsigned arity, sort * const * domain, sort * range) {
@@ -617,6 +655,9 @@ namespace datalog {
                 break;
             }
 
+            case OP_DL_MIN:
+                return mk_min(k, num_parameters, parameters);
+
             default:
                 m_manager->raise_exception("operator not recognized");
                 return 0;
@@ -627,7 +668,7 @@ namespace datalog {
     }
 
     void dl_decl_plugin::get_op_names(svector<builtin_name> & op_names, symbol const & logic) {
-
+        op_names.push_back(builtin_name(m_min_sym.bare_str(), OP_DL_MIN));
     }
 
     void dl_decl_plugin::get_sort_names(svector<builtin_name> & sort_names, symbol const & logic) {

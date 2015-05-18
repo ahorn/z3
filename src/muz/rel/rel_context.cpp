@@ -289,8 +289,9 @@ namespace datalog {
         }
         return res;
     }
-
+    
     void rel_context::transform_rules() {
+        /*
         rule_transformer transf(m_context);
         transf.register_plugin(alloc(mk_coi_filter, m_context));
         transf.register_plugin(alloc(mk_filter_rules, m_context));        
@@ -311,6 +312,7 @@ namespace datalog {
             transf.register_plugin(alloc(mk_interp_tail_simplifier, m_context, 21000));
         }
         m_context.transform_rules(transf);
+        */
     }
 
     bool rel_context::try_get_size(func_decl* p, unsigned& rel_size) const {

@@ -1,4 +1,4 @@
-#ifdef _WINDOWS
+#if defined(_WINDOWS) || defined(_CYGWIN)
 #include "dl_context.h"
 #include "dl_register_engine.h"
 #include "dl_finite_product_relation.h"

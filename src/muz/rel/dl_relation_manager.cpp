@@ -36,12 +36,12 @@ namespace datalog {
 
 
     void relation_manager::reset_relations() {
-        relation_map::iterator it=m_relations.begin();
-        relation_map::iterator end=m_relations.end();
-        for(;it!=end;++it) {
+        relation_map::iterator it = m_relations.begin();
+        relation_map::iterator end = m_relations.end();
+        for (; it != end; ++it) {
             func_decl * pred = it->m_key;
             get_context().get_manager().dec_ref(pred); //inc_ref in get_relation
-            relation_base * r=(*it).m_value;
+            relation_base * r = (*it).m_value;
             r->deallocate();
         }
         m_relations.reset();
@@ -50,7 +50,7 @@ namespace datalog {
     void relation_manager::reset() {
         reset_relations();
 
-        m_favourite_table_plugin   = static_cast<table_plugin *>(0);
+        m_favourite_table_plugin = static_cast<table_plugin *>(0);
         m_favourite_relation_plugin = static_cast<relation_plugin *>(0);
         dealloc_ptr_vector_content(m_table_plugins);
         m_table_plugins.reset();
@@ -64,7 +64,7 @@ namespace datalog {
         return get_context().get_decl_util();
     }
 
-    family_id relation_manager::get_next_relation_fid(relation_plugin & claimer) { 
+    family_id relation_manager::get_next_relation_fid(relation_plugin & claimer) {
         unsigned res = m_next_relation_fid++;
         m_kind2plugin.insert(res, &claimer);
         return res;
@@ -77,7 +77,7 @@ namespace datalog {
 
     family_id relation_manager::get_requested_predicate_kind(func_decl * pred) {
         family_id res;
-        if(m_pred_kinds.find(pred, res)) {
+        if (m_pred_kinds.find(pred, res)) {
             return res;
         }
         else {
@@ -87,7 +87,7 @@ namespace datalog {
 
     relation_base & relation_manager::get_relation(func_decl * pred) {
         relation_base * res = try_get_relation(pred);
-        if(!res) {
+        if (!res) {
             relation_signature sig;
             from_predicate(pred, sig);
             family_id rel_kind = get_requested_predicate_kind(pred);
@@ -99,7 +99,7 @@ namespace datalog {
 
     relation_base * relation_manager::try_get_relation(func_decl * pred) const {
         relation_base * res = 0;
-        if(!m_relations.find(pred, res)) {
+        if (!m_relations.find(pred, res)) {
             return 0;
         }
         SASSERT(res);
@@ -121,8 +121,8 @@ namespace datalog {
     void relation_manager::collect_non_empty_predicates(decl_set & res) const {
         relation_map::iterator it = m_relations.begin();
         relation_map::iterator end = m_relations.end();
-        for(; it!=end; ++it) {
-            if(!it->m_value->fast_empty()) {
+        for (; it != end; ++it) {
+            if (!it->m_value->fast_empty()) {
                 res.insert(it->m_key);
             }
         }
@@ -134,7 +134,7 @@ namespace datalog {
 
         relation_map::iterator rit = m_relations.begin();
         relation_map::iterator rend = m_relations.end();
-        for(; rit!=rend; ++rit) {
+        for (; rit != rend; ++rit) {
             func_decl * pred = rit->m_key;
             if (!preds.contains(pred)) {
                 to_remove.insert(pred);
@@ -143,10 +143,10 @@ namespace datalog {
 
         fd_vector::iterator pit = to_remove.begin();
         fd_vector::iterator pend = to_remove.end();
-        for(; pit!=pend; ++pit) {
+        for (; pit != pend; ++pit) {
             func_decl * pred = *pit;
             relation_base * rel;
-            VERIFY( m_relations.find(pred, rel) );
+            VERIFY(m_relations.find(pred, rel));
             rel->deallocate();
             m_relations.remove(pred);
             get_context().get_manager().dec_ref(pred);
@@ -159,7 +159,7 @@ namespace datalog {
         plugin->initialize(get_next_table_fid());
         m_table_plugins.push_back(plugin);
 
-        if(plugin->get_name()==get_context().default_table()) {
+        if (plugin->get_name() == get_context().default_table()) {
             m_favourite_table_plugin = plugin;
         }
 
@@ -167,34 +167,34 @@ namespace datalog {
         register_relation_plugin_impl(tr_plugin);
         m_table_relation_plugins.insert(plugin, tr_plugin);
 
-        if (plugin->get_name()==get_context().default_table()) {
-            m_favourite_table_plugin    = plugin;
+        if (plugin->get_name() == get_context().default_table()) {
+            m_favourite_table_plugin = plugin;
             m_favourite_relation_plugin = tr_plugin;
         }
 
         symbol checker_name = get_context().default_table_checker();
         if (get_context().default_table_checked() && get_table_plugin(checker_name)) {
-            if( m_favourite_table_plugin &&
-                (plugin==m_favourite_table_plugin || plugin->get_name()==checker_name) ) {
+            if (m_favourite_table_plugin &&
+                (plugin == m_favourite_table_plugin || plugin->get_name() == checker_name)) {
                 symbol checked_name = get_context().default_table();
                 //the plugins we need to create the checking plugin were just added
-                SASSERT(m_favourite_table_plugin->get_name()==get_context().default_table());
+                SASSERT(m_favourite_table_plugin->get_name() == get_context().default_table());
                 table_plugin * checking_plugin = alloc(check_table_plugin, *this, checker_name, checked_name);
                 register_plugin(checking_plugin);
                 m_favourite_table_plugin = checking_plugin;
             }
             if (m_favourite_relation_plugin && m_favourite_relation_plugin->from_table()) {
-                table_relation_plugin * fav_rel_plugin = 
+                table_relation_plugin * fav_rel_plugin =
                     static_cast<table_relation_plugin *>(m_favourite_relation_plugin);
-                if(&fav_rel_plugin->get_table_plugin()==plugin || plugin->get_name()==checker_name) {
+                if (&fav_rel_plugin->get_table_plugin() == plugin || plugin->get_name() == checker_name) {
                     //the plugins we need to create the checking table_relation_plugin were just added
-                    SASSERT(m_favourite_relation_plugin->get_name() == 
+                    SASSERT(m_favourite_relation_plugin->get_name() ==
                         get_context().default_relation());
                     symbol checked_name = fav_rel_plugin->get_table_plugin().get_name();
                     table_plugin * checking_plugin = alloc(check_table_plugin, *this, checker_name, checked_name);
                     register_plugin(checking_plugin);
 
-                    table_relation_plugin * checking_tr_plugin = 
+                    table_relation_plugin * checking_tr_plugin =
                         alloc(table_relation_plugin, *checking_plugin, *this);
                     register_relation_plugin_impl(checking_tr_plugin);
                     m_table_relation_plugins.insert(checking_plugin, checking_tr_plugin);
@@ -212,7 +212,7 @@ namespace datalog {
         if (plugin->get_name() == get_context().default_relation()) {
             m_favourite_relation_plugin = plugin;
         }
-        if(plugin->is_finite_product_relation()) {
+        if (plugin->is_finite_product_relation()) {
             finite_product_relation_plugin * fprp = static_cast<finite_product_relation_plugin *>(plugin);
             relation_plugin * inner = &fprp->get_inner_plugin();
             m_finite_product_relation_plugins.insert(inner, fprp);
@@ -220,13 +220,13 @@ namespace datalog {
     }
 
     relation_plugin * relation_manager::try_get_appropriate_plugin(const relation_signature & s) {
-        if(m_favourite_relation_plugin && m_favourite_relation_plugin->can_handle_signature(s)) {
+        if (m_favourite_relation_plugin && m_favourite_relation_plugin->can_handle_signature(s)) {
             return m_favourite_relation_plugin;
         }
         relation_plugin_vector::iterator rpit = m_relation_plugins.begin();
         relation_plugin_vector::iterator rpend = m_relation_plugins.end();
-        for(; rpit!=rpend; ++rpit) {
-            if((*rpit)->can_handle_signature(s)) {
+        for (; rpit != rpend; ++rpit) {
+            if ((*rpit)->can_handle_signature(s)) {
                 return *rpit;
             }
         }
@@ -247,8 +247,8 @@ namespace datalog {
         }
         table_plugin_vector::iterator tpit = m_table_plugins.begin();
         table_plugin_vector::iterator tpend = m_table_plugins.end();
-        for(; tpit!=tpend; ++tpit) {
-            if((*tpit)->can_handle_signature(t)) {
+        for (; tpit != tpend; ++tpit) {
+            if ((*tpit)->can_handle_signature(t)) {
                 return *tpit;
             }
         }
@@ -257,7 +257,7 @@ namespace datalog {
 
     table_plugin & relation_manager::get_appropriate_plugin(const table_signature & t) {
         table_plugin * res = try_get_appropriate_plugin(t);
-        if(!res) {
+        if (!res) {
             throw default_exception("no suitable plugin found for given table signature");
         }
         return *res;
@@ -266,8 +266,8 @@ namespace datalog {
     relation_plugin * relation_manager::get_relation_plugin(symbol const& s) {
         relation_plugin_vector::iterator rpit = m_relation_plugins.begin();
         relation_plugin_vector::iterator rpend = m_relation_plugins.end();
-        for(; rpit!=rpend; ++rpit) {
-            if((*rpit)->get_name()==s) {
+        for (; rpit != rpend; ++rpit) {
+            if ((*rpit)->get_name() == s) {
                 return *rpit;
             }
         }
@@ -275,8 +275,8 @@ namespace datalog {
     }
 
     relation_plugin & relation_manager::get_relation_plugin(family_id kind) {
-        SASSERT(kind>=0);
-        SASSERT(kind<m_next_relation_fid);
+        SASSERT(kind >= 0);
+        SASSERT(kind < m_next_relation_fid);
         relation_plugin * res;
         VERIFY(m_kind2plugin.find(kind, res));
         return *res;
@@ -285,8 +285,8 @@ namespace datalog {
     table_plugin * relation_manager::get_table_plugin(symbol const& k) {
         table_plugin_vector::iterator tpit = m_table_plugins.begin();
         table_plugin_vector::iterator tpend = m_table_plugins.end();
-        for(; tpit!=tpend; ++tpit) {
-            if((*tpit)->get_name()==k) {
+        for (; tpit != tpend; ++tpit) {
+            if ((*tpit)->get_name() == k) {
                 return *tpit;
             }
         }
@@ -295,12 +295,12 @@ namespace datalog {
 
     table_relation_plugin & relation_manager::get_table_relation_plugin(table_plugin & tp) {
         table_relation_plugin * res;
-        VERIFY( m_table_relation_plugins.find(&tp, res) );
+        VERIFY(m_table_relation_plugins.find(&tp, res));
         return *res;
     }
 
-    bool relation_manager::try_get_finite_product_relation_plugin(const relation_plugin & inner, 
-            finite_product_relation_plugin * & res) {
+    bool relation_manager::try_get_finite_product_relation_plugin(const relation_plugin & inner,
+        finite_product_relation_plugin * & res) {
         return m_finite_product_relation_plugins.find(&inner, res);
     }
 
@@ -312,15 +312,15 @@ namespace datalog {
     bool relation_manager::is_non_explanation(relation_signature const& s) const {
         dl_decl_util & decl_util = get_context().get_decl_util();
         unsigned n = s.size();
-        for(unsigned i = 0; i < n; i++) {
-            if(decl_util.is_rule_sort(s[i])) {
+        for (unsigned i = 0; i < n; i++) {
+            if (decl_util.is_rule_sort(s[i])) {
                 return false;
             }
         }
         return true;
     }
 
-    relation_base * relation_manager::mk_empty_relation(const relation_signature & s, func_decl* pred) {        
+    relation_base * relation_manager::mk_empty_relation(const relation_signature & s, func_decl* pred) {
         return mk_empty_relation(s, get_requested_predicate_kind(pred));
     }
 
@@ -355,13 +355,13 @@ namespace datalog {
 
 
     relation_base * relation_manager::mk_table_relation(const relation_signature & s, table_base * table) {
-        SASSERT(s.size()==table->get_signature().size());
+        SASSERT(s.size() == table->get_signature().size());
         return get_table_relation_plugin(table->get_plugin()).mk_from_table(s, table);
     }
 
     bool relation_manager::mk_empty_table_relation(const relation_signature & s, relation_base * & result) {
         table_signature tsig;
-        if(!relation_signature_to_table(s, tsig)) {
+        if (!relation_signature_to_table(s, tsig)) {
             return false;
         }
         table_base * table = mk_empty_table(tsig);
@@ -385,26 +385,26 @@ namespace datalog {
         return mk_full_relation(s, pred, kind);
     }
 
-    void relation_manager::relation_to_table(const relation_sort & sort, const relation_element & from, 
-            table_element & to) {
-        SASSERT(from->get_num_args()==0);
+    void relation_manager::relation_to_table(const relation_sort & sort, const relation_element & from,
+        table_element & to) {
+        SASSERT(from->get_num_args() == 0);
         VERIFY(get_context().get_decl_util().is_numeral_ext(from, to));
     }
 
-    void relation_manager::table_to_relation(const relation_sort & sort, const table_element & from, 
-            relation_element & to) {
+    void relation_manager::table_to_relation(const relation_sort & sort, const table_element & from,
+        relation_element & to) {
         to = get_decl_util().mk_numeral(from, sort);
     }
 
-    void relation_manager::table_to_relation(const relation_sort & sort, const table_element & from, 
-            relation_element_ref & to) {
+    void relation_manager::table_to_relation(const relation_sort & sort, const table_element & from,
+        relation_element_ref & to) {
         relation_element rel_el;
         table_to_relation(sort, from, rel_el);
         to = rel_el;
     }
 
-    void relation_manager::table_to_relation(const relation_sort & sort, const table_element & from, 
-            const relation_fact::el_proxy & to) {
+    void relation_manager::table_to_relation(const relation_sort & sort, const table_element & from,
+        const relation_fact::el_proxy & to) {
         relation_element rel_el;
         table_to_relation(sort, from, rel_el);
         to = rel_el;
@@ -420,8 +420,8 @@ namespace datalog {
 
     void relation_manager::from_predicate(func_decl * pred, relation_signature & result) {
         result.reset();
-        unsigned arg_num=pred->get_arity();
-        for(unsigned i=0;i<arg_num; i++) {
+        unsigned arg_num = pred->get_arity();
+        for (unsigned i = 0; i < arg_num; i++) {
             relation_sort rel_srt;
             from_predicate(pred, i, rel_srt);
             result.push_back(rel_srt);
@@ -430,34 +430,34 @@ namespace datalog {
 
 
     bool relation_manager::relation_signature_to_table(const relation_signature & from, table_signature & to) {
-        unsigned n=from.size();
+        unsigned n = from.size();
         to.resize(n);
-        for(unsigned i=0; i<n; i++) {
-            if(!relation_sort_to_table(from[i], to[i])) {
+        for (unsigned i = 0; i < n; i++) {
+            if (!relation_sort_to_table(from[i], to[i])) {
                 return false;
             }
         }
         return true;
     }
 
-    void relation_manager::relation_fact_to_table(const relation_signature & s, const relation_fact & from, 
-            table_fact & to) {
-        SASSERT(s.size()==from.size());
-        unsigned n=from.size();
+    void relation_manager::relation_fact_to_table(const relation_signature & s, const relation_fact & from,
+        table_fact & to) {
+        SASSERT(s.size() == from.size());
+        unsigned n = from.size();
         to.resize(n);
-        for(unsigned i=0;i<n;i++) {
+        for (unsigned i = 0; i < n; i++) {
             relation_to_table(s[i], from[i], to[i]);
         }
     }
 
-    void relation_manager::table_fact_to_relation(const relation_signature & s, const table_fact & from, 
+    void relation_manager::table_fact_to_relation(const relation_signature & s, const table_fact & from,
         relation_fact & to) {
-            SASSERT(s.size()==from.size());
-            unsigned n=from.size();
-            to.resize(n);
-            for(unsigned i=0;i<n;i++) {
-                table_to_relation(s[i], from[i], to[i]);
-            }
+        SASSERT(s.size() == from.size());
+        unsigned n = from.size();
+        to.resize(n);
+        for (unsigned i = 0; i < n; i++) {
+            table_to_relation(s[i], from[i], to[i]);
+        }
     }
 
     void relation_manager::set_cancel(bool f) {
@@ -469,7 +469,7 @@ namespace datalog {
     std::string relation_manager::to_nice_string(const relation_element & el) const {
         uint64 val;
         std::stringstream stm;
-        if(get_context().get_decl_util().is_numeral_ext(el, val)) {
+        if (get_context().get_decl_util().is_numeral_ext(el, val)) {
             stm << val;
         }
         else {
@@ -481,7 +481,7 @@ namespace datalog {
     std::string relation_manager::to_nice_string(const relation_sort & s, const relation_element & el) const {
         std::stringstream stm;
         uint64 val;
-        if(get_context().get_decl_util().is_numeral_ext(el, val)) {
+        if (get_context().get_decl_util().is_numeral_ext(el, val)) {
             get_context().print_constant_name(s, val, stm);
         }
         else {
@@ -499,43 +499,43 @@ namespace datalog {
         bool first = true;
         relation_signature::const_iterator it = s.begin();
         relation_signature::const_iterator end = s.end();
-        for(; it!=end; ++it) {
-            if(first) {
+        for (; it != end; ++it) {
+            if (first) {
                 first = false;
             }
             else {
-                res+=',';
+                res += ',';
             }
-            res+=to_nice_string(*it);
+            res += to_nice_string(*it);
         }
-        res+=']';
+        res += ']';
 
         return res;
     }
 
     void relation_manager::display(std::ostream & out) const {
-        relation_map::iterator it=m_relations.begin();
-        relation_map::iterator end=m_relations.end();
-        for(;it!=end;++it) {
+        relation_map::iterator it = m_relations.begin();
+        relation_map::iterator end = m_relations.end();
+        for (; it != end; ++it) {
             out << "Table " << it->m_key->get_name() << "\n";
             it->m_value->display(out);
         }
     }
 
     void relation_manager::display_relation_sizes(std::ostream & out) const {
-        relation_map::iterator it=m_relations.begin();
-        relation_map::iterator end=m_relations.end();
-        for(;it!=end;++it) {
-            out << "Relation " << it->m_key->get_name() << " has size " 
+        relation_map::iterator it = m_relations.begin();
+        relation_map::iterator end = m_relations.end();
+        for (; it != end; ++it) {
+            out << "Relation " << it->m_key->get_name() << " has size "
                 << it->m_value->get_size_estimate_rows() << "\n";
         }
     }
 
     void relation_manager::display_output_tables(rule_set const& rules, std::ostream & out) const {
         const decl_set & output_preds = rules.get_output_predicates();
-        decl_set::iterator it=output_preds.begin();
-        decl_set::iterator end=output_preds.end();
-        for(; it!=end; ++it) {
+        decl_set::iterator it = output_preds.begin();
+        decl_set::iterator end = output_preds.end();
+        for (; it != end; ++it) {
             func_decl * pred = *it;
             relation_base * rel = try_get_relation(pred);
             if (!rel) {
@@ -553,12 +553,12 @@ namespace datalog {
     //
     // -----------------------------------
 
-    class relation_manager::empty_signature_relation_join_fn : public relation_join_fn {
+    class relation_manager::empty_signature_relation_join_fn : public relation_join_fn{
     public:
         virtual relation_base * operator()(const relation_base & r1, const relation_base & r2) {
             TRACE("dl", tout << r1.get_plugin().get_name() << " " << r2.get_plugin().get_name() << "\n";);
-            if(r1.get_signature().empty()) {
-                if(r1.empty()) {
+            if (r1.get_signature().empty()) {
+                if (r1.empty()) {
                     return r2.get_manager().mk_empty_relation(r2.get_signature(), r2.get_kind());
                 }
                 else {
@@ -567,7 +567,7 @@ namespace datalog {
             }
             else {
                 SASSERT(r2.get_signature().empty());
-                if(r2.empty()) {
+                if (r2.empty()) {
                     return r1.get_manager().mk_empty_relation(r1.get_signature(), r1.get_kind());
                 }
                 else {
@@ -578,31 +578,31 @@ namespace datalog {
     };
 
     relation_join_fn * relation_manager::mk_join_fn(const relation_base & t1, const relation_base & t2,
-            unsigned col_cnt, const unsigned * cols1, const unsigned * cols2, bool allow_product_relation) {
+        unsigned col_cnt, const unsigned * cols1, const unsigned * cols2, bool allow_product_relation) {
         relation_plugin * p1 = &t1.get_plugin();
         relation_plugin * p2 = &t2.get_plugin();
 
         relation_join_fn * res = p1->mk_join_fn(t1, t2, col_cnt, cols1, cols2);
-        
-        if(!res && p1!=p2) {
+
+        if (!res && p1 != p2) {
             res = p2->mk_join_fn(t1, t2, col_cnt, cols1, cols2);
         }
 
-        if(!res && (t1.get_signature().empty() || t2.get_signature().empty())) {
+        if (!res && (t1.get_signature().empty() || t2.get_signature().empty())) {
             res = alloc(empty_signature_relation_join_fn);
         }
 
         finite_product_relation_plugin * fprp;
-        if(!res && p1->from_table() && try_get_finite_product_relation_plugin(*p2, fprp)) {
+        if (!res && p1->from_table() && try_get_finite_product_relation_plugin(*p2, fprp)) {
             //we downcast here to relation_plugin so that we don't have to declare 
             //relation_manager as a friend class of finite_product_relation_plugin
             res = static_cast<relation_plugin *>(fprp)->mk_join_fn(t1, t2, col_cnt, cols1, cols2);
         }
-        if(!res && p2->from_table() && try_get_finite_product_relation_plugin(*p1, fprp)) {
+        if (!res && p2->from_table() && try_get_finite_product_relation_plugin(*p1, fprp)) {
             res = static_cast<relation_plugin *>(fprp)->mk_join_fn(t1, t2, col_cnt, cols1, cols2);
         }
 
-        if(!res && allow_product_relation) {
+        if (!res && allow_product_relation) {
             relation_plugin & product_plugin = product_relation_plugin::get_plugin(*this);
             res = product_plugin.mk_join_fn(t1, t2, col_cnt, cols1, cols2);
         }
@@ -610,12 +610,12 @@ namespace datalog {
         return res;
     }
 
-    relation_transformer_fn * relation_manager::mk_project_fn(const relation_base & t, unsigned col_cnt, 
-            const unsigned * removed_cols) {
+    relation_transformer_fn * relation_manager::mk_project_fn(const relation_base & t, unsigned col_cnt,
+        const unsigned * removed_cols) {
         return t.get_plugin().mk_project_fn(t, col_cnt, removed_cols);
     }
 
-    class relation_manager::default_relation_filter_interpreted_and_project_fn : public relation_transformer_fn {
+    class relation_manager::default_relation_filter_interpreted_and_project_fn : public relation_transformer_fn{
         scoped_ptr<relation_mutator_fn>     m_filter;
         scoped_ptr<relation_transformer_fn> m_project;
         unsigned_vector                     m_removed_cols;
@@ -623,19 +623,19 @@ namespace datalog {
         /**
             This constructor should be used only if we know that the projection operation
             exists for the result of the join.
-        */
+            */
         default_relation_filter_interpreted_and_project_fn(
             relation_mutator_fn* filter,
             unsigned removed_col_cnt,
             const unsigned * removed_cols)
-            : m_filter(filter), 
-              m_project(0), 
-              m_removed_cols(removed_col_cnt, removed_cols) {}
+            : m_filter(filter),
+            m_project(0),
+            m_removed_cols(removed_col_cnt, removed_cols) {}
 
         virtual relation_base * operator()(const relation_base & t) {
             scoped_rel<relation_base> t1 = t.clone();
             (*m_filter)(*t1);
-            if( !m_project) {
+            if (!m_project) {
                 relation_manager & rmgr = t1->get_plugin().get_manager();
                 m_project = rmgr.mk_project_fn(*t1, m_removed_cols.size(), m_removed_cols.c_ptr());
                 if (!m_project) {
@@ -650,35 +650,35 @@ namespace datalog {
         const relation_base & t, app * condition,
         unsigned removed_col_cnt, const unsigned * removed_cols) {
 
-        relation_transformer_fn* res = 
+        relation_transformer_fn* res =
             t.get_plugin().mk_filter_interpreted_and_project_fn(
-                t, 
-                condition,
-                removed_col_cnt,
-                removed_cols);
+            t,
+            condition,
+            removed_col_cnt,
+            removed_cols);
 
         if (!res) {
             relation_mutator_fn* filter_fn = mk_filter_interpreted_fn(t, condition);
             if (filter_fn) {
-                res = alloc(default_relation_filter_interpreted_and_project_fn, 
-                            filter_fn,
-                            removed_col_cnt,
-                            removed_cols);
+                res = alloc(default_relation_filter_interpreted_and_project_fn,
+                    filter_fn,
+                    removed_col_cnt,
+                    removed_cols);
             }
         }
         return res;
     }
 
-    class relation_manager::default_relation_apply_sequential_fn : public relation_mutator_fn {
+    class relation_manager::default_relation_apply_sequential_fn : public relation_mutator_fn{
         ptr_vector<relation_mutator_fn> m_mutators;
     public:
-        default_relation_apply_sequential_fn(unsigned n, relation_mutator_fn ** mutators):
-            m_mutators(n, mutators) {            
+        default_relation_apply_sequential_fn(unsigned n, relation_mutator_fn ** mutators) :
+            m_mutators(n, mutators) {
         }
         virtual ~default_relation_apply_sequential_fn() {
             std::for_each(m_mutators.begin(), m_mutators.end(), delete_proc<relation_mutator_fn>());
         }
-        
+
         virtual void operator()(relation_base& t) {
             for (unsigned i = 0; i < m_mutators.size(); ++i) {
                 if (t.empty()) return;
@@ -691,7 +691,7 @@ namespace datalog {
         return alloc(default_relation_apply_sequential_fn, n, mutators);
     }
 
-    class relation_manager::default_relation_join_project_fn : public relation_join_fn {
+    class relation_manager::default_relation_join_project_fn : public relation_join_fn{
         scoped_ptr<relation_join_fn> m_join;
         scoped_ptr<relation_transformer_fn> m_project;
 
@@ -707,10 +707,10 @@ namespace datalog {
 
         virtual relation_base * operator()(const relation_base & t1, const relation_base & t2) {
             scoped_rel<relation_base> aux = (*m_join)(t1, t2);
-            if(!m_project) {
+            if (!m_project) {
                 relation_manager & rmgr = aux->get_plugin().get_manager();
                 m_project = rmgr.mk_project_fn(*aux, m_removed_cols.size(), m_removed_cols.c_ptr());
-                if(!m_project) {
+                if (!m_project) {
                     throw default_exception("projection does not exist");
                 }
             }
@@ -721,74 +721,74 @@ namespace datalog {
 
 
     relation_join_fn * relation_manager::mk_join_project_fn(const relation_base & t1, const relation_base & t2,
-            unsigned joined_col_cnt, const unsigned * cols1, const unsigned * cols2, 
-            unsigned removed_col_cnt, const unsigned * removed_cols, bool allow_product_relation_join) { 
-        relation_join_fn * res = t1.get_plugin().mk_join_project_fn(t1, t2, joined_col_cnt, cols1, cols2, 
+        unsigned joined_col_cnt, const unsigned * cols1, const unsigned * cols2,
+        unsigned removed_col_cnt, const unsigned * removed_cols, bool allow_product_relation_join) {
+        relation_join_fn * res = t1.get_plugin().mk_join_project_fn(t1, t2, joined_col_cnt, cols1, cols2,
             removed_col_cnt, removed_cols);
-        if(!res && &t1.get_plugin()!=&t2.get_plugin()) {
-            res = t2.get_plugin().mk_join_project_fn(t1, t2, joined_col_cnt, cols1, cols2, removed_col_cnt, 
+        if (!res && &t1.get_plugin() != &t2.get_plugin()) {
+            res = t2.get_plugin().mk_join_project_fn(t1, t2, joined_col_cnt, cols1, cols2, removed_col_cnt,
                 removed_cols);
         }
-        if(!res) {
+        if (!res) {
             relation_join_fn * join = mk_join_fn(t1, t2, joined_col_cnt, cols1, cols2, allow_product_relation_join);
-            if(join) {
+            if (join) {
                 res = alloc(default_relation_join_project_fn, join, removed_col_cnt, removed_cols);
             }
         }
         return res;
-                
+
     }
 
-    relation_transformer_fn * relation_manager::mk_rename_fn(const relation_base & t, unsigned permutation_cycle_len, 
-            const unsigned * permutation_cycle) {
+    relation_transformer_fn * relation_manager::mk_rename_fn(const relation_base & t, unsigned permutation_cycle_len,
+        const unsigned * permutation_cycle) {
         return t.get_plugin().mk_rename_fn(t, permutation_cycle_len, permutation_cycle);
     }
 
-    relation_transformer_fn * relation_manager::mk_permutation_rename_fn(const relation_base & t, 
-            const unsigned * permutation) {
+    relation_transformer_fn * relation_manager::mk_permutation_rename_fn(const relation_base & t,
+        const unsigned * permutation) {
         relation_transformer_fn * res = t.get_plugin().mk_permutation_rename_fn(t, permutation);
-        if(!res) {
+        if (!res) {
             res = alloc(default_relation_permutation_rename_fn, t, permutation);
         }
         return res;
     }
 
 
-    relation_union_fn * relation_manager::mk_union_fn(const relation_base & tgt, const relation_base & src, 
-            const relation_base * delta) {         
-        TRACE("dl", tout << src.get_plugin().get_name() << " " << tgt.get_plugin().get_name() << "\n";); 
+    relation_union_fn * relation_manager::mk_union_fn(const relation_base & tgt, const relation_base & src,
+        const relation_base * delta) {
+        TRACE("dl", tout << src.get_plugin().get_name() << " " << tgt.get_plugin().get_name() << "\n";);
         relation_union_fn * res = tgt.get_plugin().mk_union_fn(tgt, src, delta);
-        if(!res && &tgt.get_plugin()!=&src.get_plugin()) {
+        if (!res && &tgt.get_plugin() != &src.get_plugin()) {
             res = src.get_plugin().mk_union_fn(tgt, src, delta);
         }
-        if(!res && delta && &tgt.get_plugin()!=&delta->get_plugin() && &src.get_plugin()!=&delta->get_plugin()) {
+        if (!res && delta && &tgt.get_plugin() != &delta->get_plugin() && &src.get_plugin() != &delta->get_plugin()) {
             res = delta->get_plugin().mk_union_fn(tgt, src, delta);
         }
         return res;
     }
 
-    relation_union_fn * relation_manager::mk_widen_fn(const relation_base & tgt, const relation_base & src, 
-            const relation_base * delta) { 
+    relation_union_fn * relation_manager::mk_widen_fn(const relation_base & tgt, const relation_base & src,
+        const relation_base * delta) {
         relation_union_fn * res = tgt.get_plugin().mk_widen_fn(tgt, src, delta);
-        if(!res && &tgt.get_plugin()!=&src.get_plugin()) {
+        if (!res && &tgt.get_plugin() != &src.get_plugin()) {
             res = src.get_plugin().mk_widen_fn(tgt, src, delta);
         }
-        if(!res && delta && &tgt.get_plugin()!=&delta->get_plugin() && &src.get_plugin()!=&delta->get_plugin()) {
+        if (!res && delta && &tgt.get_plugin() != &delta->get_plugin() && &src.get_plugin() != &delta->get_plugin()) {
             res = delta->get_plugin().mk_widen_fn(tgt, src, delta);
         }
-        if(!res) {
+        if (!res) {
             res = mk_union_fn(tgt, src, delta);
         }
         return res;
     }
 
-    relation_mutator_fn * relation_manager::mk_filter_identical_fn(const relation_base & t, unsigned col_cnt, 
-            const unsigned * identical_cols) { 
+    relation_mutator_fn * relation_manager::mk_filter_identical_fn(const relation_base & t, unsigned col_cnt,
+        const unsigned * identical_cols) {
         return t.get_plugin().mk_filter_identical_fn(t, col_cnt, identical_cols);
     }
 
-    relation_mutator_fn * relation_manager::mk_filter_equal_fn(const relation_base & t, 
-            const relation_element & value, unsigned col) { 
+    relation_mutator_fn * relation_manager::mk_filter_equal_fn(const relation_base & t,
+        const relation_element & value, unsigned col) {
 
         return t.get_plugin().mk_filter_equal_fn(t, value, col);
     }
@@ -797,7 +797,7 @@ namespace datalog {
         return t.get_plugin().mk_filter_interpreted_fn(t, condition);
     }
 
-    class relation_manager::default_relation_select_equal_and_project_fn : public relation_transformer_fn {
+    class relation_manager::default_relation_select_equal_and_project_fn : public relation_transformer_fn{
         scoped_ptr<relation_mutator_fn> m_filter;
         scoped_ptr<relation_transformer_fn> m_project;
     public:
@@ -813,15 +813,15 @@ namespace datalog {
         }
     };
 
-    relation_transformer_fn * relation_manager::mk_select_equal_and_project_fn(const relation_base & t, 
-            const relation_element & value, unsigned col) { 
+    relation_transformer_fn * relation_manager::mk_select_equal_and_project_fn(const relation_base & t,
+        const relation_element & value, unsigned col) {
         relation_transformer_fn * res = t.get_plugin().mk_select_equal_and_project_fn(t, value, col);
-        if(!res) {
+        if (!res) {
             relation_mutator_fn * selector = mk_filter_equal_fn(t, value, col);
-            if(selector) {
+            if (selector) {
                 relation_transformer_fn * projector = mk_project_fn(t, 1, &col);
-                if(projector) {
-                    res = alloc(default_relation_select_equal_and_project_fn, selector, projector); 
+                if (projector) {
+                    res = alloc(default_relation_select_equal_and_project_fn, selector, projector);
                 }
                 else {
                     dealloc(selector);
@@ -832,80 +832,80 @@ namespace datalog {
     }
 
 
-    class relation_manager::default_relation_intersection_filter_fn : public relation_intersection_filter_fn {
+    class relation_manager::default_relation_intersection_filter_fn : public relation_intersection_filter_fn{
         scoped_ptr<relation_join_fn> m_join_fun;
         scoped_ptr<relation_union_fn> m_union_fun;
     public:
 
-        default_relation_intersection_filter_fn(relation_join_fn * join_fun, relation_union_fn * union_fun) 
+        default_relation_intersection_filter_fn(relation_join_fn * join_fun, relation_union_fn * union_fun)
             : m_join_fun(join_fun), m_union_fun(union_fun) {}
 
         virtual void operator()(relation_base & tgt, const relation_base & intersected_obj) {
             scoped_rel<relation_base> filtered_rel = (*m_join_fun)(tgt, intersected_obj);
-            TRACE("dl", 
-                  tgt.display(tout << "tgt:\n"); 
-                  intersected_obj.display(tout << "intersected:\n");
-                  filtered_rel->display(tout << "filtered:\n");
-                  );
-            if(!m_union_fun) {
+            TRACE("dl",
+                tgt.display(tout << "tgt:\n");
+            intersected_obj.display(tout << "intersected:\n");
+            filtered_rel->display(tout << "filtered:\n");
+            );
+            if (!m_union_fun) {
                 SASSERT(tgt.can_swap(*filtered_rel));
                 tgt.swap(*filtered_rel);
             }
             tgt.reset();
-            TRACE("dl", tgt.display(tout << "target reset:\n"); );
+            TRACE("dl", tgt.display(tout << "target reset:\n"););
             (*m_union_fun)(tgt, *filtered_rel);
-            TRACE("dl", tgt.display(tout << "intersected target:\n"); );
+            TRACE("dl", tgt.display(tout << "intersected target:\n"););
         }
 
     };
 
     relation_intersection_filter_fn * relation_manager::try_mk_default_filter_by_intersection_fn(
-            const relation_base & tgt, const relation_base & src, unsigned joined_col_cnt, 
-            const unsigned * tgt_cols, const unsigned * src_cols) {
+        const relation_base & tgt, const relation_base & src, unsigned joined_col_cnt,
+        const unsigned * tgt_cols, const unsigned * src_cols) {
         TRACE("dl_verbose", tout << tgt.get_plugin().get_name() << "\n";);
         unsigned_vector join_removed_cols;
         add_sequence(tgt.get_signature().size(), src.get_signature().size(), join_removed_cols);
         scoped_rel<relation_join_fn> join_fun = mk_join_project_fn(tgt, src, joined_col_cnt, tgt_cols, src_cols,
             join_removed_cols.size(), join_removed_cols.c_ptr(), false);
-        if(!join_fun) {
+        if (!join_fun) {
             return 0;
         }
         //we perform the join operation here to see what the result is
         scoped_rel<relation_base> join_res = (*join_fun)(tgt, src);
-        if(tgt.can_swap(*join_res)) {
+        if (tgt.can_swap(*join_res)) {
             return alloc(default_relation_intersection_filter_fn, join_fun.release(), 0);
         }
-        if(join_res->get_plugin().is_product_relation()) {
+        if (join_res->get_plugin().is_product_relation()) {
             //we cannot have the product relation here, since it uses the intersection operation
             //for unions and therefore we would get into an infinite recursion
             return 0;
         }
         scoped_rel<relation_union_fn> union_fun = mk_union_fn(tgt, *join_res);
-        if(!union_fun) {
+        if (!union_fun) {
             return 0;
         }
         return alloc(default_relation_intersection_filter_fn, join_fun.release(), union_fun.release());
     }
 
 
-    relation_intersection_filter_fn * relation_manager::mk_filter_by_intersection_fn(const relation_base & t, 
-            const relation_base & src, unsigned joined_col_cnt, const unsigned * t_cols, const unsigned * src_cols) {
+    relation_intersection_filter_fn * relation_manager::mk_filter_by_intersection_fn(const relation_base & t,
+        const relation_base & src, unsigned joined_col_cnt, const unsigned * t_cols, const unsigned * src_cols) {
         TRACE("dl_verbose", tout << t.get_plugin().get_name() << "\n";);
-        relation_intersection_filter_fn * res = t.get_plugin().mk_filter_by_intersection_fn(t, src, joined_col_cnt, 
+        relation_intersection_filter_fn * res = t.get_plugin().mk_filter_by_intersection_fn(t, src, joined_col_cnt,
             t_cols, src_cols);
-        if(!res && &t.get_plugin()!=&src.get_plugin()) {
+        if (!res && &t.get_plugin() != &src.get_plugin()) {
             res = src.get_plugin().mk_filter_by_intersection_fn(t, src, joined_col_cnt, t_cols, src_cols);
         }
-        if(!res) {
+        if (!res) {
             res = try_mk_default_filter_by_intersection_fn(t, src, joined_col_cnt, t_cols, src_cols);
         }
         return res;
     }
 
-    relation_intersection_filter_fn * relation_manager::mk_filter_by_intersection_fn(const relation_base & tgt, 
-            const relation_base & src) {
+    relation_intersection_filter_fn * relation_manager::mk_filter_by_intersection_fn(const relation_base & tgt,
+        const relation_base & src) {
         TRACE("dl_verbose", tout << tgt.get_plugin().get_name() << "\n";);
-        SASSERT(tgt.get_signature()==src.get_signature());
+        SASSERT(tgt.get_signature() == src.get_signature());
         unsigned sz = tgt.get_signature().size();
         unsigned_vector cols;
         add_sequence(0, sz, cols);
@@ -913,14 +913,14 @@ namespace datalog {
     }
 
 
-    relation_intersection_filter_fn * relation_manager::mk_filter_by_negation_fn(const relation_base & t, 
-            const relation_base & negated_obj, unsigned joined_col_cnt, 
-            const unsigned * t_cols, const unsigned * negated_cols) { 
+    relation_intersection_filter_fn * relation_manager::mk_filter_by_negation_fn(const relation_base & t,
+        const relation_base & negated_obj, unsigned joined_col_cnt,
+        const unsigned * t_cols, const unsigned * negated_cols) {
         TRACE("dl", tout << t.get_plugin().get_name() << "\n";);
-        relation_intersection_filter_fn * res = t.get_plugin().mk_filter_by_negation_fn(t, negated_obj, joined_col_cnt, 
+        relation_intersection_filter_fn * res = t.get_plugin().mk_filter_by_negation_fn(t, negated_obj, joined_col_cnt,
             t_cols, negated_cols);
-        if(!res && &t.get_plugin()!=&negated_obj.get_plugin()) {
-            res = negated_obj.get_plugin().mk_filter_by_negation_fn(t, negated_obj, joined_col_cnt, t_cols, 
+        if (!res && &t.get_plugin() != &negated_obj.get_plugin()) {
+            res = negated_obj.get_plugin().mk_filter_by_negation_fn(t, negated_obj, joined_col_cnt, t_cols,
                 negated_cols);
         }
         return res;
@@ -936,11 +936,11 @@ namespace datalog {
     //
     // -----------------------------------
 
-    class relation_manager::default_table_join_fn : public convenient_table_join_fn {
+    class relation_manager::default_table_join_fn : public convenient_table_join_fn{
         unsigned m_col_cnt;
     public:
-        default_table_join_fn(const table_signature & t1_sig, const table_signature & t2_sig, unsigned col_cnt, 
-            const unsigned * cols1, const unsigned * cols2) 
+        default_table_join_fn(const table_signature & t1_sig, const table_signature & t2_sig, unsigned col_cnt,
+            const unsigned * cols1, const unsigned * cols2)
             : convenient_table_join_fn(t1_sig, t2_sig, col_cnt, cols1, cols2), m_col_cnt(col_cnt) {}
 
         virtual table_base * operator()(const table_base & t1, const table_base & t2) {
@@ -967,35 +967,35 @@ namespace datalog {
 
             table_fact acc;
 
-            for(; els1it!=els1end; ++els1it) {
+            for (; els1it != els1end; ++els1it) {
                 const table_base::row_interface & row1 = *els1it;
 
                 table_base::iterator els2it = t2.begin();
-                for(; els2it!=els2end; ++els2it) {
+                for (; els2it != els2end; ++els2it) {
                     const table_base::row_interface & row2 = *els2it;
 
-                    bool match=true;
-                    for(unsigned i=0; i<m_col_cnt; i++) {
-                        if(row1[m_cols1[i]]!=row2[m_cols2[i]]) {
-                            match=false;
+                    bool match = true;
+                    for (unsigned i = 0; i < m_col_cnt; i++) {
+                        if (row1[m_cols1[i]] != row2[m_cols2[i]]) {
+                            match = false;
                             break;
                         }
                     }
-                    if(!match) {
+                    if (!match) {
                         continue;
                     }
 
                     acc.reset();
-                    for(unsigned i=0; i<t1first_func; i++) {
+                    for (unsigned i = 0; i < t1first_func; i++) {
                         acc.push_back(row1[i]);
                     }
-                    for(unsigned i=0; i<t2first_func; i++) {
+                    for (unsigned i = 0; i < t2first_func; i++) {
                         acc.push_back(row2[i]);
                     }
-                    for(unsigned i=t1first_func; i<t1cols; i++) {
+                    for (unsigned i = t1first_func; i < t1cols; i++) {
                         acc.push_back(row1[i]);
                     }
-                    for(unsigned i=t2first_func; i<t2cols; i++) {
+                    for (unsigned i = t2first_func; i < t2cols; i++) {
                         acc.push_back(row2[i]);
                     }
                     res->add_fact(acc);
@@ -1006,20 +1006,25 @@ namespace datalog {
     };
 
     table_join_fn * relation_manager::mk_join_fn(const table_base & t1, const table_base & t2,
-            unsigned col_cnt, const unsigned * cols1, const unsigned * cols2) {
+        unsigned col_cnt, const unsigned * cols1, const unsigned * cols2) {
         table_join_fn * res = t1.get_plugin().mk_join_fn(t1, t2, col_cnt, cols1, cols2);
-        if(!res && &t1.get_plugin()!=&t2.get_plugin()) {
+        if (!res && &t1.get_plugin() != &t2.get_plugin()) {
             res = t2.get_plugin().mk_join_fn(t1, t2, col_cnt, cols1, cols2);
         }
-        if(!res) {
+        if (!res) {
             table_signature sig;
-            table_signature::from_join(t1.get_signature(), t2.get_signature(), 
+            table_signature::from_join(t1.get_signature(), t2.get_signature(),
                 col_cnt, cols1, cols2, sig);
             res = alloc(default_table_join_fn, t1.get_signature(), t2.get_signature(), col_cnt, cols1, cols2);
         }
         return res;
     }
 
+    table_min_fn * relation_manager::mk_min_fn(const table_base & t,
+        unsigned_vector & group_by_cols, const unsigned col)
+    {
+        return t.get_plugin().mk_min_fn(t, group_by_cols, col);
+    }
 
     class relation_manager::auxiliary_table_transformer_fn {
         table_fact m_row;
