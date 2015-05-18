@@ -499,12 +499,16 @@ namespace datalog {
     private:
 
         /**
-          Default implementation:
+          Reference implementation with negation:
 
           T1 = join(T, T) by group_cols
           T2 = { (t1,t2) in T1 | t1[col] > t2[col] }
           T3 = { t1 | (t1,t2) in T2 }
           T4 = T \ T3
+
+          The point of this reference implementation is to show
+          that the minimum requires negation (set difference).
+          This is relevant for fixed point computations.
         */
         virtual table_base * reference_implementation(const table_base & t) {
             relation_manager & manager = t.get_manager();
