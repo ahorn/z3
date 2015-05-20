@@ -458,7 +458,7 @@ def model_str(m,as_str=True):
 
     if m :
         vs = [(v,m[v]) for v in m]
-        vs = sorted(vs,key=lambda a,_: str(a)) 
+        vs = sorted(vs,key=lambda a,_: str(a))
         if as_str:
             return '\n'.join(['{} = {}'.format(k,v) for (k,v) in vs])
         else:

@@ -1787,7 +1787,7 @@ def mk_config():
         else:
             # Windows Release mode
             if OPTIMIZE:
-                config.write('AR_FLAGS=/nologo /LTCG\n')                
+                config.write('AR_FLAGS=/nologo /LTCG\n')
             config.write(
                 'LINK_FLAGS=/nologo /MD\n'
                 'SLINK_FLAGS=/nologo /LD\n')

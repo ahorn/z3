@@ -274,7 +274,7 @@ public:
                         ast neglit = mk_not(arg(con,i));
                         res.erase(neglit);
                     }
-                }	    
+                }        
             }
         }
 #if 0
@@ -612,7 +612,7 @@ public:
             rng = range_glb(rng,ast_scope(lit));
         }
         if(range_is_empty(rng)) return -1;
-	int hi = range_max(rng);
+    int hi = range_max(rng);
         if(hi >= frames) return frames - 1;
         return hi;
     }
@@ -1702,14 +1702,16 @@ public:
                     return res;
                 }
             }
-            if(dk == PR_MODUS_PONENS && expect_clause && op(con) == Or){
+            if(dk == PR_MODUS_PONENS && expect_clause && op(con) == Or && op(conc(prem(proof,0))) == Or){
                 Iproof::node clause = translate_main(prem(proof,0),true);
                 res = RewriteClause(clause,prem(proof,1));
                 return res;
             }
 
+#if 0
             if(dk == PR_MODUS_PONENS && expect_clause && op(con) == Or)
                 std::cout << "foo!\n";
+#endif
 
             // no idea why this shows up
             if(dk == PR_MODUS_PONENS_OEQ){
@@ -1965,6 +1967,16 @@ public:
                 res = make(commute,pf,comm_equiv);
                 break;
             }
+            case PR_AND_ELIM: {
+                std::vector<ast> rule_ax, res_conc;
+                ast piv = conc(prem(proof,0));
+                rule_ax.push_back(make(Not,piv));
+                rule_ax.push_back(con);
+                ast pf = iproof->make_axiom(rule_ax);
+                res_conc.push_back(con);
+                res = iproof->make_resolution(piv,res_conc,pf,args[0]);
+                break;
+            }
             default:
                 pfgoto(proof);
                 assert(0 && "translate_main: unsupported proof rule");
@@ -2003,10 +2015,10 @@ public:
     }
 
     iz3translation_full(iz3mgr &mgr,
-			iz3secondary *_secondary,
+            iz3secondary *_secondary,
                         const std::vector<std::vector<ast> > &cnsts,
-			const std::vector<int> &parents,
-			const std::vector<ast> &theory)
+            const std::vector<int> &parents,
+            const std::vector<ast> &theory)
         : iz3translation(mgr, cnsts, parents, theory)
     {
         frames = cnsts.size();
@@ -2027,10 +2039,10 @@ public:
 #ifdef IZ3_TRANSLATE_FULL
 
 iz3translation *iz3translation::create(iz3mgr &mgr,
-				       iz3secondary *secondary,
-				       const std::vector<std::vector<ast> > &cnsts,
-				       const std::vector<int> &parents,
-				       const std::vector<ast> &theory){
+                       iz3secondary *secondary,
+                       const std::vector<std::vector<ast> > &cnsts,
+                       const std::vector<int> &parents,
+                       const std::vector<ast> &theory){
     return new iz3translation_full(mgr,secondary,cnsts,parents,theory);
 }
 
