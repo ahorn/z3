@@ -148,6 +148,8 @@ namespace datalog {
             bool reuse_t1, instruction_block & acc);
         void make_join_project(reg_idx t1, reg_idx t2, const variable_intersection & vars, 
             const unsigned_vector & removed_cols, reg_idx & result, bool reuse_t1, instruction_block & acc);
+        void make_min(reg_idx source, reg_idx & target, const unsigned_vector & group_by_cols,
+            const unsigned min_col, instruction_block & acc);
         void make_filter_interpreted_and_project(reg_idx src, app_ref & cond,
             const unsigned_vector & removed_cols, reg_idx & result, bool reuse, instruction_block & acc);
         void make_select_equal_and_project(reg_idx src, const relation_element & val, unsigned col,
@@ -198,6 +200,22 @@ namespace datalog {
         void get_local_indexes_for_projection(rule * r, unsigned_vector & res);
         void get_local_indexes_for_projection(app * t, var_counter & globals, unsigned ofs, 
             unsigned_vector & res);
+
+        /**
+           \brief Finds all the min aggregation functions in the premise of a given rule.
+        */
+        void find_min_aggregates(const rule * r, ptr_vector<func_decl>& min_aggregates);
+
+        /**
+           \brief Decides whether a predicate is subject to a min aggregation function.
+
+           If \c decl is subject to a min aggregation function, the output parameters are written
+           with the neccessary information.
+
+           \returns true if the output paramaters have been written
+        */
+        bool prepare_min_aggregate(const func_decl * decl, const ptr_vector<func_decl>& min_aggregates,
+            unsigned_vector & group_by_cols, unsigned & min_col);
 
         /**
            \brief Into \c acc add instructions that will add new facts following from the rule into 

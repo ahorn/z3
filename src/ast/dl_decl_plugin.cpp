@@ -492,7 +492,7 @@ namespace datalog {
     }
 
     /**
-        In SMT2 syntax, we can write \c (_ min N R v_0 v_1 ... v_k) where 0 <= N <= k,
+        In SMT2 syntax, we can write \c ((_ min R N) v_0 v_1 ... v_k)) where 0 <= N <= k,
         R is a relation of sort V_0 x V_1 x ... x V_k and each v_i is a zero-arity function
         (also known as a "constant" in SMT2 parlance) whose range is of sort V_i.
      */
@@ -502,68 +502,37 @@ namespace datalog {
             return 0;
         }
 
-        parameter const & min_col_parameter = parameters[0];
-        if (!min_col_parameter.is_int()) {
-            m_manager->raise_exception("invalid min aggregate definition, first parameter must be an integer");
-            return 0;
-        }
-
-        if (min_col_parameter.get_int() < 0) {
-            m_manager->raise_exception("invalid min aggregate definition, first parameter must be non-negative");
-            return 0;
-        }
-
-        parameter const & relation_parameter = parameters[1];
+        parameter const & relation_parameter = parameters[0];
         if (!relation_parameter.is_ast() || !is_func_decl(relation_parameter.get_ast())) {
-            m_manager->raise_exception("invalid min aggregate definition, second parameter is not a function declaration");
+            m_manager->raise_exception("invalid min aggregate definition, first parameter is not a function declaration");
             return 0;
         }
 
         func_decl* f = to_func_decl(relation_parameter.get_ast());
         if (!m_manager->is_bool(f->get_range())) {
-            m_manager->raise_exception("invalid min aggregate definition, second paramater must be a relation");
+            m_manager->raise_exception("invalid min aggregate definition, first paramater must be a predicate");
+            return 0;
+        }
+
+        parameter const & min_col_parameter = parameters[1];
+        if (!min_col_parameter.is_int()) {
+            m_manager->raise_exception("invalid min aggregate definition, second parameter must be an integer");
+            return 0;
+        }
+
+        if (min_col_parameter.get_int() < 0) {
+            m_manager->raise_exception("invalid min aggregate definition, second parameter must be non-negative");
             return 0;
         }
 
         if ((unsigned)min_col_parameter.get_int() >= f->get_arity()) {
-            m_manager->raise_exception("invalid min aggregate definition, first parameter exceeds the arity of the relation");
+            m_manager->raise_exception("invalid min aggregate definition, second parameter exceeds the arity of the relation");
             return 0;
         }
 
-        // check parameters v_i for all 0 <= i <= f->get_arity() - 1U
-        if (num_parameters < f->get_arity() + 2U) {
-            m_manager->raise_exception("invalid min aggregate definition, too few parameters");
-            return 0;
-        }
-
-        if (num_parameters > f->get_arity() + 2U) {
-            m_manager->raise_exception("invalid min aggregate definition, too many parameters");
-            return 0;
-        }
-
-        SASSERT(num_parameters == f->get_arity() + 2U);
-
-        func_decl* g;
-        for (unsigned i = 2; i < num_parameters; ++i) {
-            if (!parameters[i].is_ast() || !is_func_decl(parameters[i].get_ast())) {
-                std::ostringstream buffer;
-                buffer << "invalid min aggregate definition, "
-                    << "parameter number " << i << " is not a function declaration";
-                m_manager->raise_exception(buffer.str().c_str());
-                return 0;
-            }
-
-            g = to_func_decl(parameters[i].get_ast());
-            if (!g->get_arity() == 0 || f->get_domain()[i - 2U] != g->get_range()) {
-                std::ostringstream buffer;
-                buffer << "invalid min aggregate definition, "
-                    << "parameter number " << i << " sort mismatches";
-                m_manager->raise_exception(buffer.str().c_str());
-                return 0;
-            }
-        }
         func_decl_info info(m_family_id, k, num_parameters, parameters);
-        return m_manager->mk_func_decl(m_min_sym, 0, (sort *const*)0, m_manager->mk_bool_sort(), info);
+        SASSERT(f->get_info() == 0);
+        return m_manager->mk_func_decl(m_min_sym, f->get_arity(), f->get_domain(), f->get_range(), info);
     }
 
     func_decl * dl_decl_plugin::mk_func_decl(

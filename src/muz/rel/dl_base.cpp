@@ -492,7 +492,7 @@ namespace datalog {
             m_col(col) {}
 
         virtual table_base* operator()(table_base const& t) {
-            // return reference_implementation(t);
+            //return reference_implementation(t);
             return reference_implementation_with_hash(t);
         }
 
